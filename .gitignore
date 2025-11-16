@@ -28,3 +28,5 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 bionemo_skelda/
+!analysis/
+!analysis/*.png
