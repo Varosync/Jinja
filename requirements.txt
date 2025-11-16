@@ -1,0 +1,33 @@
+# Consolidated Requirements for Jinja
+# Path Generation Components
+openmm>=8.0
+openmmtools
+pdbfixer
+mdtraj
+numpy>=1.21.0
+scipy>=1.7.0
+
+# Committor Model Components
+torch>=2.0
+transformer_engine[pytorch]
+transformers
+hydra-core
+omegaconf
+datasets
+torchdata
+wandb
+
+# Machine Learning Libraries
+scikit-learn
+
+# Analysis and Visualization
+pandas
+matplotlib>=3.4.0
+seaborn
+
+# Data Processing
+h5py>=3.4.0
+
+# Utilities
+tqdm>=4.62.0
+pyyaml

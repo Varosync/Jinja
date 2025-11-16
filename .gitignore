@@ -1,0 +1,30 @@
+# 1. All Data (Use S3!)
+data_processed/
+data_raw/
+*.h5
+*.npz
+
+# 2. All Results
+results/
+analysis_results/
+analysis_results_backbone/
+*.png
+*.jpg
+*.npy
+
+# 3. All Model Checkpoints
+checkpoints/
+*.pt
+*.pth
+
+# 4. All Cloned Repos (These are dependencies, not source)
+esmdiff/
+ENINet/
+BioNeMo/
+bionemo-framework/
+
+# 5. Python Cache & Environments
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+bionemo_skelda/

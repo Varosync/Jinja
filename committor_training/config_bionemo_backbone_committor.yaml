@@ -1,0 +1,68 @@
+# Configuration for BioNeMo Committor Model with Backbone Structure Tokens
+
+# Model configuration
+model:
+  name: "bionemo_backbone_committor"
+  vocab_size: 4096
+  embed_dim: 256
+  hidden_dim: 512
+  dropout: 0.1
+  max_seq_length: 512
+
+# Training configuration
+training:
+  batch_size: 32
+  num_epochs: 100
+  learning_rate: 0.001
+  weight_decay: 1e-5
+  optimizer: "adam"
+  loss_function: "mse"  # Mean Squared Error for continuous committor values
+  validation_split: 0.2
+  early_stopping_patience: 10
+  gradient_clip_val: 1.0
+
+# Data configuration
+data:
+  path: "data_processed/path_atlas_tokenized_backbone_full.h5"
+  max_samples: null  # Use all samples, or specify a number for testing
+  num_workers: 4
+  pin_memory: true
+
+# Checkpoint configuration
+checkpoint:
+  dir: "checkpoints/bionemo_backbone_committor"
+  save_top_k: 3
+  monitor: "val_loss"
+  mode: "min"
+
+# Hardware configuration
+hardware:
+  gpus: -1  # Use all available GPUs
+  precision: 32  # 32-bit floating point
+  accelerator: "gpu"
+  strategy: "ddp"  # Distributed Data Parallel
+
+# Logging configuration
+logging:
+  log_every_n_steps: 50
+  wandb:
+    enabled: false
+    project: "bionemo-backbone-committor"
+    entity: null
+
+# Augmentation and preprocessing
+augmentation:
+  token_dropout: 0.05  # Randomly mask 5% of tokens during training
+  noise_level: 0.01    # Add small amount of noise to embeddings
+
+# Evaluation configuration
+evaluation:
+  metrics: ["mse", "mae", "pearson"]
+  test_batch_size: 64
+
+# Advanced features
+advanced:
+  use_attention: true
+  num_attention_heads: 8
+  use_positional_encoding: true
+  layer_norm_eps: 1e-5

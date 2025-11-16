@@ -1,0 +1,37 @@
+[project]
+name = "jinja"
+version = "1.0.0"
+description = "Protein Committor Prediction Pipeline - Path Generation and Committor Training"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "openmm>=8.0",
+    "openmmtools",
+    "pdbfixer",
+    "mdtraj",
+    "numpy>=1.21.0",
+    "scipy>=1.7.0",
+    "torch>=2.0",
+    "transformer_engine[pytorch]",
+    "transformers",
+    "hydra-core",
+    "omegaconf",
+    "datasets",
+    "torchdata",
+    "wandb",
+    "scikit-learn",
+    "pandas",
+    "matplotlib>=3.4.0",
+    "seaborn",
+    "h5py>=3.4.0",
+    "tqdm>=4.62.0",
+    "pyyaml"
+]
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["enhanced_path_generation*", "committor_training*"]
