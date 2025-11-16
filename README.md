@@ -27,7 +27,7 @@ The pipeline executes in two primary phases: Data Engineering (Phase I) and Mode
 
 Since a 1D language model cannot directly see a 3D protein structure, we use the Structure Language Model (SLM) philosophy to create a tokenized representation of the 3D space.
 
-1. **3D Path Generation:** We ran a massive 8-GPU MD simulation to generate two datasets: transition paths (A$\rightarrow$B) and unbiased well samples (A$\rightarrow$A, B$\rightarrow$B). This raw data is stored in `path_atlas_backbone.h5` (backbone coordinates only).
+1. **3D Path Generation:** We ran a massive 8-GPU MD simulation to generate two datasets: transition paths (A→B) and unbiased well samples (A→A, B→B). This raw data is stored in `path_atlas_backbone.h5` (backbone coordinates only).
 2. **Tokenization:** The custom script `tokenize_atlas_backbone_simple_distributed.py` uses the **pre-trained BioNeMo ESM3 dVAE Encoder** to convert each 3D backbone conformation into a unique **1D structure token sequence**. This token sequence is then paired with the **1D amino acid sequence**.
 
 ### Data Quality Assessment
