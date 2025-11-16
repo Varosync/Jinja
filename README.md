@@ -3,7 +3,8 @@
 **A Transformer-Based Approach for Predicting Protein Activation Trajectories**
 
 <p align="center">
-  <img src="analysis/6ln2_6x18.png" alt="Jinja Pipeline Structure">
+  <img src="analysis/jinja.png" alt="Jinja Pipeline Overview" width="800"><br>
+  <img src="analysis/6ln2_6x18.png" alt="Protein Structure" width="400">
 </p>
 
 ## 1. Project Overview & Relevance
@@ -31,7 +32,7 @@ Since a 1D language model cannot directly see a 3D protein structure, we use the
 
 ### Data Quality Assessment
 
-The source data for our training model has been verified to be clean, robust, and correctly labeled.
+The source data for our training model has been verified to be clean, robust, and correctly labeled. Additional analysis plots are available in the [analysis](analysis/) folder.
 
 #### Plot 1: Committor Label Distribution
 
@@ -43,7 +44,7 @@ This plot confirms the training data is correctly segmented into the two target 
 
 This critical diagnostic demonstrates that the data is meaningful. It visualizes the frequency of structure tokens and verifies that the ESM3 dVAE encoder successfully created a rich, diverse vocabulary of features for the model to learn from, thus avoiding the "random tokens" failure.
 
-![Token Value Distribution](analysis/token_value_distribution.png)
+[View Token Value Distribution Plot](analysis/token_value_distribution.png)
 
 ### Tokenization Strategy Validation
 
@@ -51,7 +52,7 @@ A comparative study was conducted against a baseline model to evaluate the effec
 
 #### Plot 3: Model Comparison - Pearson Correlation
 
-![Comparison Correlation](analysis/comparison_correlation.png)
+[View Comparison Correlation Plot](analysis/comparison_correlation.png)
 
 * **Baseline (Simple Embedding):** The baseline model, which predicts $p_B$ using a generic sequence embedding, performs poorly with a negative correlation of -0.2035 with the true committor values.
 * **Backbone Structure Tokens (Proposed Model):** The proposed model, trained on tokenized 3D backbone data, achieves a positive correlation of 0.8154 with the true committor values.
@@ -85,7 +86,7 @@ Evaluation revealed that the model exhibits mode collapse, representing a key fi
 
 This plot illustrates a systematic bias in model predictions. The model tends to predict values near the mean ($\approx 0.5$) regardless of whether the true label is 0.0 or 1.0, indicating that the current readout head is insufficient for fully utilizing the learned representations.
 
-![Binned Errors](analysis/binned_errors.png)
+[View Binned Errors Plot](analysis/binned_errors.png)
 
 * **Interpretation:** The plot reveals mode collapse behavior. When the true committor value is 0.5 (at the transition barrier peak), the model's error is minimal, indicating accurate mean prediction. However, for extreme values (0.0 and 1.0), the model systematically under-predicts (e.g., predicting 0.58 when the true value is 1.0).
 * **Implications:** This suggests that the current readout head is insufficient for fully leveraging the deep ESM features, leading to predictions that default to the dataset mean and resulting in lower R² scores.
@@ -152,4 +153,4 @@ pip install -r requirements.txt
 This pipeline successfully established the necessary data infrastructure for committor prediction. The remaining challenges are primarily architectural.
 
 1. **Model Enhancement:** The current readout head will be replaced with a cross-attention Transformer layer to better capture relationships between the constant amino acid sequence and dynamic structure tokens, potentially addressing the mode collapse issue.
-2. **Advanced Analysis:** Once model performance is improved (R² > 0.8), the reweighting algorithm (based on Paper 3) will be implemented to generate quantitative free energy landscapes and enable allosteric site discovery.
+2. **Advanced Analysis:** Once model performance is improved (R² > 0.8), a reweighting algorithm will be implemented to generate quantitative free energy landscapes and enable allosteric site discovery.
