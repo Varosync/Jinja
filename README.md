@@ -2,7 +2,9 @@
 
 **A Transformer-Based Approach for Predicting Protein Activation Trajectories**
 
-![Jinja Pipeline](analysis/6ln2_6x18.png)
+<p align="center">
+  <img src="analysis/6ln2_6x18.png" alt="Jinja Pipeline Structure">
+</p>
 
 ## 1. Project Overview & Relevance
 
@@ -37,15 +39,11 @@ This plot confirms the training data is correctly segmented into the two target 
 
 ![Committor Distribution](analysis/committor_distribution.png)
 
-(View in analysis/committor_distribution.png)
-
 #### Plot 2: Structure Token Diversity
 
 This critical diagnostic demonstrates that the data is meaningful. It visualizes the frequency of structure tokens and verifies that the ESM3 dVAE encoder successfully created a rich, diverse vocabulary of features for the model to learn from, thus avoiding the "random tokens" failure.
 
 ![Token Value Distribution](analysis/token_value_distribution.png)
-
-(View in analysis/token_value_distribution.png)
 
 ### Tokenization Strategy Validation
 
@@ -54,8 +52,6 @@ A comparative study was conducted against a baseline model to evaluate the effec
 #### Plot 3: Model Comparison - Pearson Correlation
 
 ![Comparison Correlation](analysis/comparison_correlation.png)
-
-(View in analysis/comparison_correlation.png)
 
 * **Baseline (Simple Embedding):** The baseline model, which predicts $p_B$ using a generic sequence embedding, performs poorly with a negative correlation of -0.2035 with the true committor values.
 * **Backbone Structure Tokens (Proposed Model):** The proposed model, trained on tokenized 3D backbone data, achieves a positive correlation of 0.8154 with the true committor values.
@@ -90,8 +86,6 @@ Evaluation revealed that the model exhibits mode collapse, representing a key fi
 This plot illustrates a systematic bias in model predictions. The model tends to predict values near the mean ($\approx 0.5$) regardless of whether the true label is 0.0 or 1.0, indicating that the current readout head is insufficient for fully utilizing the learned representations.
 
 ![Binned Errors](analysis/binned_errors.png)
-
-(View in analysis/binned_errors.png)
 
 * **Interpretation:** The plot reveals mode collapse behavior. When the true committor value is 0.5 (at the transition barrier peak), the model's error is minimal, indicating accurate mean prediction. However, for extreme values (0.0 and 1.0), the model systematically under-predicts (e.g., predicting 0.58 when the true value is 1.0).
 * **Implications:** This suggests that the current readout head is insufficient for fully leveraging the deep ESM features, leading to predictions that default to the dataset mean and resulting in lower R² scores.
