@@ -1,6 +1,6 @@
-# Jinja: Committor Prediction Pipeline for GPCR Activation
+# Jinja: AI-Powered Drug Discovery for GPCRs
 
-**A Transformer-Based Approach for Predicting Protein Activation Trajectories**
+**Predicting Protein Activation Pathways and Allosteric Binding Sites with Deep Learning**
 
 
 
@@ -210,10 +210,10 @@ If you use this pipeline, please cite:
 
 ```bibtex
 @software{jinja2024,
-  title={Jinja: Committor Prediction Pipeline for GPCR Activation},
-  author={Your Name},
+  title={Jinja: Predicting GPCRs Activation Pathways with Deep Learning},
+  author={Harry Kabodha},
   year={2024},
-  url={https://github.com/yourusername/jinja-repo}
+  url={https://github.com/resilienthike/jinja-repo}
 }
 ```
 
