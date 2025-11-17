@@ -209,10 +209,10 @@ See `requirements.txt` for full dependencies.
 If you use this pipeline, please cite:
 
 ```bibtex
-@software{jinja2024,
+@software{jinja2025,
   title={Jinja: Predicting GPCRs Activation Pathways with Deep Learning},
   author={Harry Kabodha},
-  year={2024},
+  year={2025},
   url={https://github.com/resilienthike/jinja-repo}
 }
 ```
