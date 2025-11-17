@@ -9,39 +9,23 @@
 This pipeline predicts GPCR activation pathways using deep learning to identify allosteric binding sites for drug discovery. It implements the AIMMD algorithm (Jung et al. 2023) with a transformer-based committor model achieving **R²=99.55%**.
 
 ```mermaid
-graph TB
-    subgraph "Phase 1: Data Engineering"
-        A[3D Protein Structures<br/>CIF Files] --> B[ESM3 dVAE Encoder]
-        B --> C[Structure Tokens<br/>1D Sequences]
-        C --> D[Tokenized Dataset<br/>HDF5]
-    end
+graph LR
+    A[3D Structures] --> B[Tokenization]
+    B --> C[Committor Model<br/>R²=99.55%]
+    C --> D[AIMMD Analysis]
+    D --> E[Free Energy<br/>62.77 kJ/mol]
+    D --> F[Allosteric Sites]
+    E --> G[Drug Discovery]
+    F --> G
     
-    subgraph "Phase 2: Committor Training"
-        D --> E[CommittorModel<br/>3M Parameters]
-        E --> F[Transformer Encoder<br/>3 Layers, 8 Heads]
-        F --> G[Focal Loss<br/>+ Temperature Scaling]
-        G --> H[Trained Model<br/>R²=99.55%]
-    end
-    
-    subgraph "Phase 3: AIMMD Analysis"
-        H --> I[Committor Predictions<br/>p_B in 0,1]
-        I --> J[AIMMD Reweighting<br/>Jung et al. 2023]
-        J --> K[Free Energy Landscape<br/>F of p_B]
-        J --> L[Allosteric Sites<br/>Discovery]
-    end
-    
-    K --> M[Drug Discovery<br/>Applications]
-    L --> M
-    
-    style A fill:#e1f5ff
-    style H fill:#c8e6c9
-    style M fill:#fff9c4
+    style C fill:#c8e6c9
+    style G fill:#fff59d
 ```
 
 ### Key Results
 
 - **Model Performance**: R²=99.55%, Pearson=0.998
-- **Mode Collapse**: FIXED (predictions span full [0.06, 0.96] range)
+- **Prediction Range**: Full spectrum [0.06, 0.96]
 - **Free Energy Barrier**: 62.77 kJ/mol
 - **Validated**: Tested on real GPCR structures (2RH1, 3P0G)
 
@@ -184,9 +168,8 @@ k_AB ∝ ∫ δ(p_B - 0.5) exp(-F(p_B)/kT) dp_B
 
 ## Key Features
 
-- **No Mode Collapse**: Fixed with focal loss + transformer
-- **Full Range Predictions**: [0.06, 0.96] spectrum
-- **Distributed Training**: 8-GPU support
+- **High Accuracy**: R²=99.55% with full prediction range
+- **Distributed Training**: 8-GPU support with 3M parameter model
 - **Real Protein Testing**: Validated on PDB structures
 - **AIMMD Implementation**: Complete Jung et al. 2023 algorithm
 - **Visualization**: Free energy plots + site analysis
