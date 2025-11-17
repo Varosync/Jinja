@@ -17,7 +17,7 @@ This pipeline addresses limitations of traditional simulation approaches by usin
 
 * **Data Generation:** Generated a 222.4 GiB Path Atlas of GPCR backbone dynamics using high-throughput molecular dynamics (MD) sampling.
 * **Methodology:** Applied a Structure Language Model (SLM) approach using the BioNeMo ESM3 Transformer to address the 3D-to-1D representation challenge.
-* **Objective:** Compute the committor function, $p_B(x)$, which serves as the optimal reaction coordinate for characterizing the transition.
+* **Objective:** Compute the committor function, p_B(x), which serves as the optimal reaction coordinate for characterizing the transition.
 
 ## 2. Methodology & Architecture
 
@@ -54,7 +54,7 @@ A comparative study was conducted against a baseline model to evaluate the effec
 
 [View Comparison Correlation Plot](analysis/comparison_correlation.png)
 
-* **Baseline (Simple Embedding):** The baseline model, which predicts $p_B$ using a generic sequence embedding, performs poorly with a negative correlation of -0.2035 with the true committor values.
+* **Baseline (Simple Embedding):** The baseline model, which predicts p_B using a generic sequence embedding, performs poorly with a negative correlation of -0.2035 with the true committor values.
 * **Backbone Structure Tokens (Proposed Model):** The proposed model, trained on tokenized 3D backbone data, achieves a positive correlation of 0.8154 with the true committor values.
 
 This comparison demonstrates the importance of the tokenization approach for accurate committor prediction.
@@ -75,7 +75,7 @@ The training successfully converged, confirming that the "structure token" featu
 | Metric (Training Log) | Value | Interpretation |
 | :--- | :--- | :--- |
 | **Validation Loss** | **~0.015** | Low training error, indicating successful model convergence. |
-| **Well Separation ($\Delta p_B$)** | **~0.99** | The model achieved excellent discrimination between states. |
+| **Well Separation (Δp_B)** | **~0.99** | The model achieved excellent discrimination between states. |
 | **Training Accuracy** | **~0.99** | The pipeline successfully engineered features that allowed the model to achieve high separation. |
 
 ### Model Limitations: Mode Collapse
@@ -84,7 +84,7 @@ Evaluation revealed that the model exhibits mode collapse, representing a key fi
 
 #### Plot 4: Mean Prediction Error Analysis
 
-This plot illustrates a systematic bias in model predictions. The model tends to predict values near the mean ($\approx 0.5$) regardless of whether the true label is 0.0 or 1.0, indicating that the current readout head is insufficient for fully utilizing the learned representations.
+This plot illustrates a systematic bias in model predictions. The model tends to predict values near the mean (≈0.5) regardless of whether the true label is 0.0 or 1.0, indicating that the current readout head is insufficient for fully utilizing the learned representations.
 
 [View Binned Errors Plot](analysis/binned_errors.png)
 
