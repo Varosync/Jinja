@@ -24,9 +24,9 @@ graph TB
     end
     
     subgraph "Phase 3: AIMMD Analysis"
-        H --> I[Committor Predictions<br/>p_B ∈ [0,1]]
+        H --> I[Committor Predictions<br/>p_B in 0,1]
         I --> J[AIMMD Reweighting<br/>Jung et al. 2023]
-        J --> K[Free Energy Landscape<br/>F p_B]
+        J --> K[Free Energy Landscape<br/>F of p_B]
         J --> L[Allosteric Sites<br/>Discovery]
     end
     
@@ -56,7 +56,7 @@ graph TB
 - **Model**: CommittorModel (3M parameters)
 - **Architecture**: Transformer encoder + focal loss
 - **Training**: 8x H100 GPUs, 150 epochs
-- **Output**: Trained model predicting p_B(x) ∈ [0,1]
+- **Output**: Trained model predicting p_B(x) in [0,1]
 
 ### Phase 3: AIMMD Analysis
 - **Reweighting**: Jung et al. 2023 equations (12, 15, 17)
