@@ -1,32 +1,51 @@
-# 1. All Data (Use S3!)
-data_processed/
-data_raw/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Data
 *.h5
 *.npz
+*.cif
+*.cif.gz
+*.pdb
+data_processed/
+data_raw/
 
-# 2. All Results
+# Checkpoints (keep structure, ignore large files)
+checkpoints/*/*.pt
+!checkpoints/fixed_committor/
+checkpoints/fixed_committor/*.pt
+
+# Results
 results/
-analysis_results/
-analysis_results_backbone/
 *.png
 *.jpg
-*.npy
+*.pdf
 
-# 3. All Model Checkpoints
-checkpoints/
-*.pt
-*.pth
+# Logs
+*.log
+training_*.log
 
-# 4. All Cloned Repos (These are dependencies, not source)
-esmdiff/
-ENINet/
-BioNeMo/
-bionemo-framework/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# 5. Python Cache & Environments
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
-bionemo_skelda/
-!analysis/
-!analysis/*.png
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+tmp/
+temp/
+*.tmp
