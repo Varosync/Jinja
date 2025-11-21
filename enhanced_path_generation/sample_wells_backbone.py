@@ -11,6 +11,7 @@ import time
 from queue import Empty
 import sys
 import re
+import gzip
 
 # Import from local modules
 from generate_paths_backbone import BackboneGPCRPathGenerator, extract_protein_name
@@ -327,8 +328,6 @@ def generate_well_sampling_tasks(structures_dir, num_replicas=5):
         
         # For well sampling, we'll use the inactive protein name as the identifier
         protein_name = inactive_protein_name
-        
-        print(f"  Creating tasks for pair: {inactive_file.name} <-> {active_file.name}")
         
         # Generate tasks for inactive structure
         for replica in range(num_replicas):

@@ -9,6 +9,8 @@ from pathlib import Path
 import time
 import sys
 from collections import defaultdict
+import multiprocessing as mp
+from queue import Empty
 
 
 class BackboneBarrierSampler:
@@ -179,13 +181,75 @@ def extract_shooting_points_from_paths(paths_dir, sampling_frequency=5):
     return shooting_points
 
 
+def worker_process(gpu_id, task_queue, result_queue, output_dir):
+    """Worker process for parallel barrier generation"""
+    while True:
+        try:
+            task = task_queue.get(timeout=1)
+            if task is None:
+                break
+            
+            task_id, shooting_point = task
+            
+            try:
+                start_sequence = shooting_point.get('start_sequence', None)
+                end_sequence = shooting_point.get('end_sequence', None)
+                
+                sampler = BackboneBarrierSampler(
+                    start_positions=shooting_point['positions'],
+                    start_sequence=start_sequence,
+                    end_sequence=end_sequence,
+                    gpu_index=gpu_id,
+                    num_steps=500,
+                    timestep=1.0,
+                    temperature=300.0
+                )
+                
+                sample_data = sampler.generate_barrier_sample(bias_strength=3.0)
+                final_cv = sample_data['cv_values'][-1]
+                label = 0.0 if final_cv < 0.5 else 1.0
+                
+                sample_data['metadata']['label'] = label
+                sample_data['label'] = label
+                
+                direction = shooting_point.get('direction', 'unknown')
+                output_file = output_dir / f"barrier_{shooting_point['source_file']}_frame{shooting_point['frame_index']:03d}_{direction}.npz"
+                sampler.save_sample(sample_data, output_file)
+                
+                result = {
+                    'task_id': task_id,
+                    'gpu_id': gpu_id,
+                    'source_file': shooting_point['source_file'],
+                    'frame_index': shooting_point['frame_index'],
+                    'direction': direction,
+                    'initial_cv': shooting_point['cv_value'],
+                    'final_cv': final_cv,
+                    'label': label,
+                    'output_file': str(output_file),
+                    'status': 'success'
+                }
+                result_queue.put(result)
+                
+            except Exception as e:
+                result = {
+                    'task_id': task_id,
+                    'gpu_id': gpu_id,
+                    'error': str(e),
+                    'status': 'failed'
+                }
+                result_queue.put(result)
+                
+        except Empty:
+            continue
+        except KeyboardInterrupt:
+            break
+
 def main():
     print("=" * 70)
-    print("GENERATING BARRIER SAMPLES FROM TRANSITION PATHS (BACKBONE COORDINATES)")
+    print("8-GPU PARALLEL BARRIER SAMPLE GENERATION")
     print("=" * 70)
-    print("Running short 'shots' from transition path frames to explore transition mechanisms")
     
-    # Configuration
+    num_gpus = 8
     paths_dir = "data_processed/enhanced_paths_backbone"
     output_dir = Path("data_processed/barrier_samples_backbone")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -193,81 +257,59 @@ def main():
     print(f"Paths directory: {paths_dir}")
     print(f"Output directory: {output_dir}")
     
-    # Extract shooting points from transition paths
     shooting_points = extract_shooting_points_from_paths(paths_dir, sampling_frequency=3)
     
     if not shooting_points:
-        print("No shooting points extracted from transition paths!")
+        print("No shooting points extracted!")
         return 1
     
-    print(f"\nGenerating barrier samples for {len(shooting_points)} shooting points...")
+    print(f"\nGenerating {len(shooting_points)} barrier samples on {num_gpus} GPUs...")
     
-    # Generate barrier samples
+    # Create queues
+    task_queue = mp.Queue()
+    result_queue = mp.Queue()
+    
+    # Fill task queue
+    for i, sp in enumerate(shooting_points):
+        task_queue.put((i, sp))
+    
+    # Add poison pills
+    for _ in range(num_gpus):
+        task_queue.put(None)
+    
+    # Start workers
+    workers = []
+    for gpu_id in range(num_gpus):
+        p = mp.Process(target=worker_process, args=(gpu_id, task_queue, result_queue, output_dir))
+        p.start()
+        workers.append(p)
+    
+    # Monitor progress
     results = []
-    for i, shooting_point in enumerate(shooting_points):
-        print(f"\nProcessing shooting point {i+1}/{len(shooting_points)}")
-        print(f"  Source: {shooting_point['source_file']}, Frame: {shooting_point['frame_index']}")
-        
+    completed = 0
+    start_time = time.time()
+    
+    while completed < len(shooting_points):
         try:
-            # Extract sequence information
-            start_sequence = shooting_point.get('start_sequence', None)
-            end_sequence = shooting_point.get('end_sequence', None)
-            
-            # Generate barrier sample
-            sampler = BackboneBarrierSampler(
-                start_positions=shooting_point['positions'],
-                start_sequence=start_sequence,
-                end_sequence=end_sequence,
-                gpu_index=0,  # Using single GPU for simplicity
-                num_steps=500,  # Short shots for barrier sampling
-                timestep=1.0,
-                temperature=300.0
-            )
-            
-            sample_data = sampler.generate_barrier_sample(bias_strength=3.0)
-            
-            # Determine label based on final state - ensure we have both 0.0 and 1.0 labels
-            final_cv = sample_data['cv_values'][-1]
-            # For barrier sampling, we want a good mix of both labels
-            # Use the existing logic but with a more balanced approach
-            label = 0.0 if final_cv < 0.5 else 1.0
-            
-            # Add label to metadata
-            sample_data['metadata']['label'] = label
-            sample_data['label'] = label
-            
-            # Save sample
-            direction = shooting_point.get('direction', 'unknown')
-            output_file = output_dir / f"barrier_{shooting_point['source_file']}_frame{shooting_point['frame_index']:03d}_{direction}.npz"
-            sampler.save_sample(sample_data, output_file)
-            
-            # Record result
-            result = {
-                'sample_id': len(results),
-                'source_file': shooting_point['source_file'],
-                'frame_index': shooting_point['frame_index'],
-                'direction': direction,
-                'initial_cv': shooting_point['cv_value'],
-                'final_cv': final_cv,
-                'label': label,
-                'frames': len(sample_data['positions']),
-                'output_file': str(output_file),
-                'status': 'success'
-            }
+            result = result_queue.get(timeout=1)
             results.append(result)
+            completed += 1
             
-            print(f"✓ Completed barrier sample: CV {shooting_point['cv_value']:.2f} → {final_cv:.2f} (Label: {label})")
-            
-        except Exception as e:
-            print(f"✗ Failed barrier sample: {e}")
-            result = {
-                'sample_id': len(results),
-                'source_file': shooting_point['source_file'],
-                'frame_index': shooting_point['frame_index'],
-                'error': str(e),
-                'status': 'failed'
-            }
-            results.append(result)
+            if completed % 10 == 0 or completed == len(shooting_points):
+                elapsed = time.time() - start_time
+                rate = completed / elapsed if elapsed > 0 else 0
+                eta = (len(shooting_points) - completed) / rate if rate > 0 else 0
+                print(f"Progress: {completed}/{len(shooting_points)} ({100*completed/len(shooting_points):.1f}%) - {rate:.1f} samples/s - ETA: {eta/60:.1f}m")
+                
+        except Empty:
+            continue
+    
+    # Wait for workers
+    for p in workers:
+        p.join()
+    
+    successful = sum(1 for r in results if r['status'] == 'success')
+    print(f"\n✓ Generated {successful}/{len(shooting_points)} barrier samples")
     
     # Summary
     successful = sum(1 for r in results if r['status'] == 'success')

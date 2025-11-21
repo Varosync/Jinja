@@ -24,7 +24,10 @@ class AIMDReweighting:
     def predict_committor(self, structure_tokens):
         """Predict p_B for structure tokens"""
         with torch.no_grad():
-            tokens = torch.from_numpy(structure_tokens).long().to(self.device)
+            tokens = torch.from_numpy(structure_tokens).long()
+            # Replace -1 padding with 0 to avoid index errors
+            tokens = torch.clamp(tokens, min=0, max=4095)
+            tokens = tokens.to(self.device)
             if tokens.dim() == 1:
                 tokens = tokens.unsqueeze(0)
             logits = self.model(tokens)

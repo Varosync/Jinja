@@ -4,36 +4,24 @@ __pycache__/
 *$py.class
 *.so
 .Python
-*.egg-info/
-dist/
-build/
-
-# Jupyter
-.ipynb_checkpoints
+venv/
+env/
 
 # Data
+data_raw/
+data_processed/
 *.h5
 *.npz
 *.cif
 *.cif.gz
-*.pdb
-data_processed/
-data_raw/
 
-# Checkpoints (keep structure, ignore large files)
-checkpoints/*/*.pt
-!checkpoints/fixed_committor/
-checkpoints/fixed_committor/*.pt
+# Checkpoints
+checkpoints/*/
+!checkpoints/.gitkeep
 
 # Results
-results/
-*.png
-*.jpg
-*.pdf
-
-# Logs
-*.log
-training_*.log
+results/*/
+!results/.gitkeep
 
 # IDE
 .vscode/
@@ -41,11 +29,14 @@ training_*.log
 *.swp
 *.swo
 
+# Logs
+*.log
+logs/
+
+# Internal notes
+TODO_*.md
+*_demo.py
+
 # OS
 .DS_Store
 Thumbs.db
-
-# Temporary
-tmp/
-temp/
-*.tmp

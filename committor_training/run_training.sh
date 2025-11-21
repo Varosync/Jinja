@@ -1,10 +1,13 @@
 #!/bin/bash
-# Production training script for committor model (R²=99.55%)
+# Training script for committor model with venv
 
 echo "Starting committor model training..."
 
-DATA_PATH="${1:-../data_processed/sample_tokenized_backbone.h5}"
-CHECKPOINT_DIR="${2:-../checkpoints/committor}"
+# Activate venv
+source ../venv/bin/activate
+
+DATA_PATH="${1:-../data_processed/path_atlas_tokenized_backbone_full.h5}"
+CHECKPOINT_DIR="${2:-../checkpoints}"
 BATCH_SIZE=16
 NUM_EPOCHS=150
 LEARNING_RATE=0.0001

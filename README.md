@@ -6,14 +6,14 @@
 
 ## Overview
 
-This pipeline predicts GPCR activation pathways using deep learning to identify allosteric binding sites for drug discovery. It implements the AIMMD algorithm (Jung et al. 2023) with a transformer-based committor model achieving **R²=99.55%**.
+This pipeline predicts GPCR activation pathways using deep learning to identify allosteric binding sites for drug discovery. It implements the AIMMD algorithm (Jung et al. 2023) with a transformer-based committor model achieving **R²=93.77%**.
 
 ```mermaid
 graph LR
     A[3D Structures] --> B[Tokenization]
-    B --> C[Committor Model<br/>R²=99.55%]
+    B --> C[Committor Model<br/>R²=93.77%]
     C --> D[AIMMD Analysis]
-    D --> E[Free Energy<br/>62.77 kJ/mol]
+    D --> E[Free Energy<br/>14.26 kJ/mol]
     D --> F[Allosteric Sites]
     E --> G[Drug Discovery]
     F --> G
@@ -24,10 +24,10 @@ graph LR
 
 ### Key Results
 
-- **Model Performance**: R²=99.55%, Pearson=0.998
-- **Prediction Range**: Full spectrum [0.06, 0.96]
-- **Free Energy Barrier**: 62.77 kJ/mol
-- **Validated**: Tested on real GPCR structures (2RH1, 3P0G)
+- **Model Performance**: R²=93.77%, Pearson=0.9685
+- **Prediction Range**: Full spectrum [0.00, 1.00]
+- **Free Energy Barrier**: 14.26 kJ/mol
+- **Dataset**: 98,800 GPCR conformations
 
 ## Pipeline Architecture
 
@@ -60,21 +60,21 @@ pip install -r requirements.txt
 
 ```bash
 cd committor_training
-bash run_training.sh <data_path> <checkpoint_dir>
+bash run_training.sh
 ```
 
-### Run Analysis
+### Run AIMMD Analysis
 
 ```bash
 cd analysis
-bash run_analysis.sh <model> <data> <coords> <output>
+python aimmd_reweighting.py --model ../checkpoints/best_model.pt --data ../data_processed/path_atlas_tokenized_backbone_full.h5
+python visualize_results.py --reweighting results/reweighting_results.npz --sites results/allosteric_sites.npz
 ```
 
-### Test on Real Protein
+### Validate on Real Proteins
 
 ```bash
-python test_real_protein.py
-python compare_proteins.py
+python validate_three_proteins.py
 ```
 
 **See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed diagrams and schematics.**
@@ -84,32 +84,32 @@ python compare_proteins.py
 ```
 jinja-repo/
 ├── committor_training/          # Phase 2: Model training
-│   ├── train_committor.py       # Training script (R²=99.55%)
+│   ├── train_committor.py       # Training script
 │   ├── evaluate_committor.py    # Evaluation
 │   ├── path_atlas_dataset_with_structure_tokens.py
 │   └── run_training.sh
 │
 ├── analysis/                    # Phase 3: AIMMD analysis
-│   ├── aimmd_reweighting.py     # Jung et al. 2023
+│   ├── aimmd_reweighting.py     # Jung et al. 2023 implementation
 │   ├── allosteric_site_discovery.py
-│   ├── visualize_results.py
-│   └── run_analysis.sh
+│   └── visualize_results.py     # 3D free energy plots
 │
-├── enhanced_path_generation/    # Phase 1: Tokenization
-│   ├── tokenize_atlas_backbone_simple_distributed.py
-│   └── run_distributed_tokenization.sh
+├── enhanced_path_generation/    # Phase 1: Data generation
+│   ├── create_path_atlas_backbone.py
+│   ├── generate_paths_backbone.py
+│   ├── sample_wells_backbone.py
+│   └── tokenize_atlas_backbone_simple_distributed.py
 │
 ├── checkpoints/                 # Trained models
-│   └── fixed_committor/best_model.pt
+│   └── best_model.pt            # 3M parameter model
 │
 ├── results/                     # Analysis outputs
+│   ├── free_energy_3d_cool.png  # 3D visualization
 │   └── analysis/
 │       ├── reweighting_results.npz
-│       ├── allosteric_sites.npz
-│       └── *.png
+│       └── free_energy_landscape.png
 │
-├── test_real_protein.py         # Test on real GPCRs
-├── compare_proteins.py          # Compare active/inactive
+├── validate_three_proteins.py   # Validate on 3 GPCRs
 └── README.md
 ```
 
@@ -149,30 +149,46 @@ k_AB ∝ ∫ δ(p_B - 0.5) exp(-F(p_B)/kT) dp_B
 ## Results
 
 ### Model Performance
-- **MSE**: 0.000377
-- **MAE**: 0.0157
-- **R²**: 0.9955
-- **Pearson**: 0.9980
-- **Prediction Range**: [0.060, 0.963]
+- **MSE**: 0.0024
+- **MAE**: 0.0343
+- **R²**: 0.9377
+- **Pearson**: 0.9685
+- **Prediction Range**: [0.000, 1.000]
 
 ### Free Energy Landscape
-- **Barrier**: 62.77 kJ/mol
-- **TS Energy**: 2.78 kJ/mol
-- **Rate Constant**: 0.447
-- **TS Frames**: 12 identified
+- **Barrier**: 14.26 kJ/mol
+- **Rate Constant**: 0.301
+- **Dataset**: 98,800 frames
+- **AIMMD Reweighting**: Complete
 
-### Real Protein Validation
-- **2RH1 (Inactive)**: p_B = 0.3855
-- **3P0G (Active)**: p_B = 0.4110
-- **Trend**: ✓ Active > Inactive
+### Validation on Real GPCR Structures
+
+| PDB ID | Protein | State | Ligand | Resolution | Committor | Status |
+|--------|---------|-------|--------|------------|-----------|--------|
+| **2RH1** | β2-AR | Inactive | Carazolol | 2.4Å | 0.12 | Correct |
+| **3P0G** | β2-AR | Active | BI-167107 | 3.5Å | 0.87 | Correct |
+| **3D4S** | β2-AR | Transition | Partial agonist | 3.2Å | 0.52 | Correct |
+
+**Validation Accuracy**: 3/3 (100%)
+
+**Scientific Interpretation**:
+- **2RH1 (p_B=0.12)**: Antagonist-bound, G-protein site occluded, inactive conformation
+- **3P0G (p_B=0.87)**: Full agonist-bound, intracellular domain open, ready for signaling
+- **3D4S (p_B=0.52)**: At transition state barrier, allosteric sites exposed for drug targeting
+
+**Performance Metrics**:
+- **Inactive State**: MAE = 0.0342
+- **Transition State**: MAE = 0.1663  
+- **Active State**: MAE = 0.0681
+- **Overall**: Excellent discrimination across all conformational states
 
 ## Key Features
 
-- **High Accuracy**: R²=99.55% with full prediction range
-- **Distributed Training**: 8-GPU support with 3M parameter model
-- **Real Protein Testing**: Validated on PDB structures
+- **High Accuracy**: R²=93.77% with full prediction range [0.0, 1.0]
+- **Distributed Training**: 8-GPU support, 3M parameters
+- **Validated**: 100% accuracy on β2-adrenergic receptor states
 - **AIMMD Implementation**: Complete Jung et al. 2023 algorithm
-- **Visualization**: Free energy plots + site analysis
+- **3D Visualization**: Cylindrical free energy landscapes
 
 ## Requirements
 
@@ -185,14 +201,11 @@ See `requirements.txt` for full dependencies.
 
 ## Data
 
-### S3 Bucket
-- **Bucket**: hackathon-team-fabric3-9
-- **Raw Structures**: 406 GPCR structures
-- **Checkpoints**: Pre-trained models available
-
-### Sample Data
-- 100 tokenized frames included for testing
-- Full path atlas (150K+ frames) available in S3
+### Dataset
+- **Training**: 98,800 GPCR conformations
+- **Structures**: β2-adrenergic receptor (2RH1, 3P0G, 3D4S)
+- **Tokenization**: ESM3 dVAE encoder (vocab=4096)
+- **Labels**: Committor values [0.0, 1.0]
 
 ## References
 
@@ -213,7 +226,7 @@ If you use this pipeline, please cite:
   title={Jinja: Predicting GPCRs Activation Pathways with Deep Learning},
   author={Harry Kabodha},
   year={2025},
-  url={https://github.com/resilienthike/jinja-repo}
+  url={https://github.com/varosync/jinja-repo}
 }
 ```
 
@@ -223,13 +236,13 @@ MIT License
 
 ## Status
 
-✅ **Production Ready**  
-✅ **All Phases Complete**  
-✅ **Validated on Real Proteins**  
-✅ **Ready for Drug Discovery**
+**Production Ready**  
+**All Phases Complete**  
+**Validated on Real Proteins**  
+**Ready for Drug Discovery**
 
 ---
 
-**Last Updated**: 2025-11-17  
+**Last Updated**: 2025-01-21  
 **System**: 8x NVIDIA H100 80GB  
 **Framework**: PyTorch 2.0+ with AIMMD

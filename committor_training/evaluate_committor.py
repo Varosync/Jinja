@@ -9,19 +9,33 @@ import argparse
 from path_atlas_dataset_with_structure_tokens import BackboneTokenDataset
 from train_committor import CommittorModel
 
-def evaluate(checkpoint_path, data_path):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+def evaluate(checkpoint_path, data_path, max_samples=None):
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print(f'Using device: {device}')
     
     model = CommittorModel().to(device)
-    model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+    model.load_state_dict(torch.load(checkpoint_path, map_location=device, weights_only=True))
+    
+    # Use DataParallel for multi-GPU inference
+    if torch.cuda.device_count() > 1:
+        print(f'Using {torch.cuda.device_count()} GPUs for evaluation')
+        model = torch.nn.DataParallel(model)
+    
     model.eval()
     
+    print('Loading dataset...')
     dataset = BackboneTokenDataset(data_path)
-    loader = DataLoader(dataset, batch_size=100, shuffle=False)
+    if max_samples:
+        dataset = torch.utils.data.Subset(dataset, range(min(max_samples, len(dataset))))
+    loader = DataLoader(dataset, batch_size=2048, shuffle=False, num_workers=4, pin_memory=True)
+    
+    print(f'Evaluating on {len(dataset)} samples...')
     
     predictions, labels = [], []
     with torch.no_grad():
-        for batch in loader:
+        for i, batch in enumerate(loader):
+            if i % 10 == 0:
+                print(f'  Batch {i}/{len(loader)}')
             logits = model(batch['structure_tokens'].to(device))
             preds = torch.sigmoid(logits)
             predictions.extend(preds.cpu().numpy())
@@ -43,5 +57,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint', type=str, required=True)
     parser.add_argument('--data', type=str, required=True)
+    parser.add_argument('--max_samples', type=int, default=None, help='Limit samples for quick eval')
     args = parser.parse_args()
-    evaluate(args.checkpoint, args.data)
+    evaluate(args.checkpoint, args.data, args.max_samples)

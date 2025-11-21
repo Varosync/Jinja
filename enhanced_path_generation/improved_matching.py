@@ -112,17 +112,20 @@ def find_matching_proteins_improved(inactive_dir, active_dir):
     # Also look for cross-matching within related prefixes
     # This handles cases where similar proteins might have slightly different prefixes
     print("  Looking for cross-matches...")
+    cross_match_count = 0
     for inactive_prefix, inactive_list in inactive_by_prefix.items():
         for active_prefix, active_list in active_by_prefix.items():
             # Check if prefixes are similar (share first 3 characters)
             if inactive_prefix[:3] == active_prefix[:3] and inactive_prefix != active_prefix:
-                print(f"  Cross-match found: {inactive_prefix} <-> {active_prefix}")
                 for inactive_file in inactive_list:
                     for active_file in active_list:
                         pair = (inactive_file, active_file)
                         pairs.append(pair)
                         groups[f"{inactive_prefix}_{active_prefix}"].append(pair)
-                        print(f"    Cross-match: {inactive_file.name} <-> {active_file.name}")
+                        cross_match_count += 1
+    
+    if cross_match_count > 0:
+        print(f"  Found {cross_match_count} cross-matches")
     
     print(f"  Total matching pairs: {len(pairs)}")
     return pairs, groups

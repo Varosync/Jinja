@@ -68,19 +68,23 @@ class CommittorModel(nn.Module):
         return logits / self.temperature
 
 def setup_distributed():
-    local_rank = int(os.environ["LOCAL_RANK"])
-    world_size = int(os.environ["WORLD_SIZE"])
-    rank = int(os.environ["RANK"])
-    dist.init_process_group("nccl")
-    torch.cuda.set_device(local_rank)
-    return local_rank, world_size, rank
+    if "LOCAL_RANK" in os.environ:
+        local_rank = int(os.environ["LOCAL_RANK"])
+        world_size = int(os.environ["WORLD_SIZE"])
+        rank = int(os.environ["RANK"])
+        dist.init_process_group("nccl")
+        torch.cuda.set_device(local_rank)
+        return local_rank, world_size, rank
+    else:
+        return 0, 1, 0
 
 def cleanup_distributed():
-    dist.destroy_process_group()
+    if dist.is_initialized():
+        dist.destroy_process_group()
 
 def train_model():
     local_rank, world_size, rank = setup_distributed()
-    device = torch.device(f'cuda:{local_rank}')
+    device = torch.device(f'cuda:{local_rank}' if torch.cuda.is_available() else 'cpu')
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', type=str, required=True)
@@ -100,7 +104,8 @@ def train_model():
     loader = DataLoader(dataset, batch_size=args.batch_size, sampler=sampler, num_workers=4, pin_memory=True)
     
     model = CommittorModel().to(device)
-    model = DDP(model, device_ids=[local_rank])
+    if world_size > 1:
+        model = DDP(model, device_ids=[local_rank])
     
     if rank == 0:
         print(f'Dataset: {len(dataset)}, Params: {sum(p.numel() for p in model.parameters()):,}')
@@ -142,11 +147,13 @@ def train_model():
             print(f'Epoch {epoch+1}: Loss={avg_loss:.4f}')
             
             if (epoch + 1) % 30 == 0:
-                torch.save(model.module.state_dict(), f'{args.checkpoint_dir}/model_epoch_{epoch+1}.pt')
+                state_dict = model.module.state_dict() if world_size > 1 else model.state_dict()
+                torch.save(state_dict, f'{args.checkpoint_dir}/model_epoch_{epoch+1}.pt')
             
             if avg_loss < best_loss:
                 best_loss = avg_loss
-                torch.save(model.module.state_dict(), f'{args.checkpoint_dir}/best_model.pt')
+                state_dict = model.module.state_dict() if world_size > 1 else model.state_dict()
+                torch.save(state_dict, f'{args.checkpoint_dir}/best_model.pt')
                 print(f'  ✓ Best: {best_loss:.4f}')
     
     cleanup_distributed()

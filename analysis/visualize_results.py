@@ -2,28 +2,67 @@
 """Visualize AIMMD analysis results"""
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.cm as cm
 
 def plot_free_energy_landscape(results_path, output_path):
-    """Plot free energy profile F(p_B)"""
+    """Plot 3D free energy landscape with gradient surface"""
     data = np.load(results_path)
     bin_centers = data['bin_centers']
     F = data['free_energy']
     
-    plt.figure(figsize=(10, 6))
-    plt.plot(bin_centers, F, 'b-', linewidth=2)
-    plt.axvline(0.5, color='r', linestyle='--', label='Transition State')
-    plt.xlabel('Committor p_B', fontsize=14)
-    plt.ylabel('Free Energy (kJ/mol)', fontsize=14)
-    plt.title('Free Energy Landscape', fontsize=16)
-    plt.legend()
-    plt.grid(alpha=0.3)
+    fig = plt.figure(figsize=(14, 10))
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # Create meshgrid for 3D surface
+    theta = np.linspace(0, 2*np.pi, 100)
+    p_B_mesh, theta_mesh = np.meshgrid(bin_centers, theta)
+    F_mesh = np.tile(F, (len(theta), 1))
+    
+    # Convert to cylindrical coordinates
+    X = p_B_mesh * np.cos(theta_mesh)
+    Y = p_B_mesh * np.sin(theta_mesh)
+    Z = F_mesh
+    
+    # Normalize colors
+    norm = plt.Normalize(Z.min(), Z.max())
+    colors = cm.plasma(norm(Z))
+    
+    # Plot surface with gradient
+    surf = ax.plot_surface(X, Y, Z, facecolors=colors, 
+                           linewidth=0, antialiased=True, alpha=0.9)
+    
+    # Add contour lines at base
+    ax.contour(X, Y, Z, zdir='z', offset=Z.min()-5, 
+               cmap='plasma', levels=15, alpha=0.6)
+    
+    # Highlight transition state
+    ts_idx = np.argmin(np.abs(bin_centers - 0.5))
+    ts_circle_x = 0.5 * np.cos(theta)
+    ts_circle_y = 0.5 * np.sin(theta)
+    ts_circle_z = np.full_like(theta, F[ts_idx])
+    ax.plot(ts_circle_x, ts_circle_y, ts_circle_z, 
+            'r-', linewidth=4, label='Transition State')
+    
+    # Styling
+    ax.set_xlabel('X (Committor Space)', fontsize=12, labelpad=10)
+    ax.set_ylabel('Y (Committor Space)', fontsize=12, labelpad=10)
+    ax.set_zlabel('Free Energy (kJ/mol)', fontsize=12, labelpad=10)
+    ax.set_title('3D Free Energy Landscape', fontsize=16, pad=20)
+    ax.view_init(elev=25, azim=45)
+    
+    # Add colorbar
+    m = cm.ScalarMappable(cmap='plasma', norm=norm)
+    m.set_array(Z)
+    cbar = plt.colorbar(m, ax=ax, shrink=0.5, aspect=5)
+    cbar.set_label('Energy (kJ/mol)', fontsize=10)
+    
     plt.tight_layout()
-    plt.savefig(output_path, dpi=300)
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"✓ Saved {output_path}")
     
     # Print key values
     barrier = F.max()
-    ts_idx = np.argmin(np.abs(bin_centers - 0.5))
     ts_energy = F[ts_idx]
     print(f"  Barrier height: {barrier:.2f} kJ/mol")
     print(f"  TS energy: {ts_energy:.2f} kJ/mol")
