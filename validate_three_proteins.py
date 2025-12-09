@@ -152,25 +152,55 @@ def main():
     else:
         print("\n⚠ No results to validate")
     
-    # Scientific interpretation
+    # Scientific interpretation (Bedrock-powered)
     print("\n" + "="*80)
-    print("SCIENTIFIC INTERPRETATION")
+    print("SCIENTIFIC INTERPRETATION (AI-Generated)")
     print("="*80)
+    
+    # Try to import Bedrock client for dynamic interpretation
+    try:
+        import sys
+        sys.path.insert(0, str(Path(__file__).parent))
+        from utils.bedrock_client import generate_interpretation
+        use_bedrock = True
+        print("(Using Amazon Bedrock Claude for dynamic analysis)\n")
+    except ImportError:
+        use_bedrock = False
+        print("(Using static interpretation - Bedrock client not available)\n")
     
     for r in results:
         print(f"\n{r['pdb']} ({r['description']}):")
-        if r['state'] == 'INACTIVE':
-            print("  • Receptor in resting state")
-            print("  • Antagonist/inverse agonist bound")
-            print("  • G-protein binding site occluded")
-        elif r['state'] == 'ACTIVE':
-            print("  • Receptor in signaling state")
-            print("  • Agonist bound, G-protein ready")
-            print("  • Intracellular domain open")
-        else:
-            print("  • Receptor in transition state")
-            print("  • Allosteric sites exposed")
-            print("  • Ideal target for drug discovery")
+        
+        if use_bedrock:
+            try:
+                interpretation = generate_interpretation(
+                    protein_name="β2-AR",
+                    pdb_id=r['pdb'],
+                    committor_value=r['p_B'],
+                    state=r['state'],
+                    description=r['description']
+                )
+                # Format the interpretation with proper indentation
+                for line in interpretation.strip().split('\n'):
+                    print(f"  {line}")
+            except Exception as e:
+                print(f"  (Bedrock error: {e})")
+                # Fall back to static interpretation
+                use_bedrock = False
+        
+        if not use_bedrock:
+            if r['state'] == 'INACTIVE':
+                print("  • Receptor in resting state")
+                print("  • Antagonist/inverse agonist bound")
+                print("  • G-protein binding site occluded")
+            elif r['state'] == 'ACTIVE':
+                print("  • Receptor in signaling state")
+                print("  • Agonist bound, G-protein ready")
+                print("  • Intracellular domain open")
+            else:
+                print("  • Receptor in transition state")
+                print("  • Allosteric sites exposed")
+                print("  • Ideal target for drug discovery")
     
     print("\n" + "="*80)
     print("✓ VALIDATION COMPLETE")

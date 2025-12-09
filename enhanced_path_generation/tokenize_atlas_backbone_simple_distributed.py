@@ -15,9 +15,19 @@ import re
 from tqdm import tqdm
 import torch.distributed as dist
 import os
-
-# Add esmdiff to path to import the dVAE encoder
-sys.path.append(str(Path(__file__).parent.parent / "esmdiff"))
+try:
+    from huggingface_hub import login
+    # Check for HF_TOKEN
+    hf_token = os.environ.get("HF_TOKEN")
+    if hf_token:
+        print(f"✓ Found HF_TOKEN, logging in...")
+        login(token=hf_token)
+    else:
+        print("⚠ HF_TOKEN environment variable not set.")
+        print("  To access ESM3-open, please set HF_TOKEN.")
+        print("  Export it: export HF_TOKEN=hf_...")
+except ImportError:
+    print("⚠ huggingface_hub not installed. Cannot authenticate.")
 
 try:
     # Try to import the structure encoder directly from esm.pretrained
@@ -30,15 +40,14 @@ try:
         encoder_available = True
         print("✓ ESM3 structure encoder is accessible")
     except Exception as e:
-        print(f"Warning: Cannot access ESM3 model (gated repository): {e}")
-        print("Falling back to simplified structure tokenization")
-        encoder_available = False
-        ESM3_structure_encoder_v0 = None
+        print(f"✗ Cannot access ESM3 model (gated repository): {e}")
+        print("  Please ensure you have accepted the license at https://huggingface.co/evolutionaryscale/esm3-sm-open-v1")
+        print("  and set your HF_TOKEN.")
+        raise RuntimeError("ESM3 model access failed. Stopping to prevent random token generation.")
 except ImportError as e:
     print(f"Error importing ESM3 structure encoder: {e}")
-    print("Falling back to simplified structure tokenization")
-    encoder_available = False
-    ESM3_structure_encoder_v0 = None
+    raise RuntimeError("ESM3 import failed")
+
 
 
 def load_dvae_encoder(model_name="esm3_sm_open_v1"):
