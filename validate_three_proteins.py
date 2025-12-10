@@ -64,7 +64,7 @@ def main():
     print(f"✓ Model loaded on {device}\n")
     
     # Test structures from dataset
-    h5_path = 'data_processed/path_atlas_tokenized_backbone_full.h5'
+    h5_path = 'data_processed/path_atlas_tokenized_esm3.h5'
     structures = [
         {
             'name': '2RH1',

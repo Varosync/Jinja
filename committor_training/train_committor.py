@@ -101,7 +101,7 @@ def train_model():
     
     dataset = BackboneTokenDataset(args.data_path)
     sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True)
-    loader = DataLoader(dataset, batch_size=args.batch_size, sampler=sampler, num_workers=4, pin_memory=True)
+    loader = DataLoader(dataset, batch_size=args.batch_size, sampler=sampler, num_workers=0, pin_memory=True)
     
     model = CommittorModel().to(device)
     if world_size > 1:
@@ -143,7 +143,7 @@ def train_model():
         
         avg_loss = train_loss / len(loader)
         
-        if rank == 0 and (epoch + 1) % 10 == 0:
+        if rank == 0:
             print(f'Epoch {epoch+1}: Loss={avg_loss:.4f}')
             
             if (epoch + 1) % 30 == 0:

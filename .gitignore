@@ -40,3 +40,16 @@ TODO_*.md
 # OS
 .DS_Store
 Thumbs.db
+
+# Training logs
+*.log
+
+# Temp files
+*.temp_rank_*
+
+# Model checkpoints (optional - they're large)
+# checkpoints/
+
+# Data files (large)
+data_processed/*.h5
+data_raw/
