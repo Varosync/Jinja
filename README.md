@@ -1,6 +1,6 @@
 # Jinja
 
-**AI-Powered GPCR Drug Discovery Platform**
+**Deep Learning Pipeline for GPCR Drug Discovery**
 
 Predicting protein activation pathways and allosteric binding sites using deep learning.
 
