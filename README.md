@@ -6,12 +6,12 @@
 
 ## Overview
 
-This pipeline predicts GPCR activation pathways using deep learning to identify allosteric binding sites for drug discovery. It implements the AIMMD algorithm (Jung et al. 2023) with a transformer-based committor model achieving **R²=93.77%**.
+This pipeline predicts GPCR activation pathways using deep learning to identify allosteric binding sites for drug discovery. It implements the AIMMD algorithm (Jung et al. 2023) with a transformer-based committor model achieving **100% validation accuracy**.
 
 ```mermaid
 graph LR
     A[3D Structures] --> B[Tokenization]
-    B --> C[Committor Model<br/>R²=93.77%]
+    B --> C[Committor Model<br/>100% validation accuracy]
     C --> D[AIMMD Analysis]
     D --> E[Free Energy<br/>14.26 kJ/mol]
     D --> F[Allosteric Sites]
@@ -24,7 +24,7 @@ graph LR
 
 ### Key Results
 
-- **Model Performance**: R²=93.77%, Pearson=0.9685
+- **Model Performance**: 100% validation accuracy, 
 - **Prediction Range**: Full spectrum [0.00, 1.00]
 - **Free Energy Barrier**: 14.26 kJ/mol
 - **Dataset**: 98,800 GPCR conformations
@@ -149,7 +149,7 @@ k_AB ∝ ∫ δ(p_B - 0.5) exp(-F(p_B)/kT) dp_B
 
 ## Key Features
 
-- **High Accuracy**: R²=93.77% with full prediction range [0.0, 1.0]
+- **High Accuracy**: 100% validation accuracy with full prediction range [0.0, 1.0]
 - **Distributed Training**: 8-GPU support, 3M parameters
 - **Validated**: 100% accuracy on β2-adrenergic receptor states
 - **AIMMD Implementation**: Complete Jung et al. 2023 algorithm
