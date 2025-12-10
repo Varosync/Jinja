@@ -77,6 +77,19 @@ python visualize_results.py --reweighting results/reweighting_results.npz --site
 python validate_three_proteins.py
 ```
 
+### Cloud & Scalable Training
+
+```bash
+# Distributed training (supports multi-GPU)
+python sagemaker/train_sagemaker.py --epochs 100
+
+# AI-powered scientific interpretation
+python utils/bedrock_agent.py --query "Analyze protein 2RH1"
+
+# Sync data from cloud storage
+./scripts/sync_from_s3.sh
+```
+
 **See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed diagrams and schematics.**
 
 ## Repository Structure
